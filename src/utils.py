@@ -37,7 +37,7 @@ def suppression_colonnes(df):
     """
     Nettoyage : suppression des colonnes redondantes et inutiles.
     """
-    colonnes_a_supprimer = ['lat', 'lon', 'geo_point_2d', 'ARRONDISSEMENT', 'index_right', 'TYPE EMPLACEMENT', 'cleabs', 'IDEMPLACEMENT', 'COMPLEMENT ADRESSE', 'LIEU / ADRESSE', 'iris', 'IDBASE']
+    colonnes_a_supprimer = ['lat', 'lon', 'geo_point_2d', 'nom_commune', 'index_right', 'CLEABS', 'TYPE EMPLACEMENT', 'IDEMPLACEMENT', 'COMPLEMENT ADRESSE', 'LIEU / ADRESSE', 'iris', 'IDBASE']
 
     df_final = df.drop(columns=[c for c in colonnes_a_supprimer if c in df.columns])
 
