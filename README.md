@@ -5,46 +5,34 @@ Lisez ce Readme avant de lancer le projet.
 
 ## Objectif
 
-Ce projet a pour objectif d'analyser les ilôts de chaleurs à Paris en fonction des arbres sur la commune. 
+Ce projet a pour objectif d'analyser les populations d'arbres à Paris en fonction des IRIS (géographie parisienne). 
 
 ---
 
 ## Installation des données
-Pour faire fonctionner ce projet, vous devez :
-1. Télécharger les contours IRIS sur https://cartes.gouv.fr/rechercher-une-donnee/dataset/IGNF_CONTOURS-IRIS?redirected_from=geoservices.ign.fr.
-2. Dans Téléchargements et flux, choisissez le fichier Contours...IRIS en téléchargement. 
-3. Réglez les filtres tels que :
-   
-ZONE = FXX France métropolitaine
 
-FORMAT = GPKG (Geopackage)
-
-CRS = RGF93 v1 / Lambert-93 -- France
-
-4. Téléchargez le fichier : CONTOURS-IRIS_3-0__GPKG_LAMB93_FXX_2026-01-01
-5. Vous trouverez un fichier `iris.gpkg` dans `\CONTOURS-IRIS_3-0__GPKG_LAMB93_FXX_2026-01-01\CONTOURS-IRIS\1_DONNEES_LIVRAISON_2026-04-00088\CONTOURS-IRIS_3-0_GPKG_LAMB93_FXX-ED2026-01-01\iris.gpkg`
-6. Placer le fichier `iris.gpkg` dans le dossier nommé `data/` à la racine du projet.
-7. Le script filtrera automatiquement les données pour ne garder que Paris.
+Le chargement des données et le nettoyage des bases se fait directement dans notre fichier main 'Les_arbres_de_Paris.ipynb'. 
 
 ---
 
 ## Contenu du projet
 
 ```
-.
-├── /data              # Fichier iris à placer dans ce dossier
-├── 01_exploration_donnees.ipynb              # Fichier notebook à exécuter
-├── 02_visualisation.ipynb              # Fichier notebook à exécuter
-├── 03_modelisation.ipynb              # Fichier notebook à exécuter
-├── requirements.txt        # Dépendances Python
-├── README.md               # Présentation du projet
-├── .gitignore              # Fichier à ignorer pour Github
+
+├── les_arbres
+    ├── notebook   
+        ├── Les_arbres_de_Paris.ipynb           # Fichier notebook à exécuter
+    ├── src
+        ├── utils.py                    # Fichier contenant les fonctions nécessaires au code   
+    ├── requirements.txt        # Dépendances Python
+    ├── README.md               # Présentation du projet
+    ├── .gitignore              # Fichier à ignorer pour Github
 ```
 
 ---
 
 ## Données
 
-Les données sur les arbres sont issues de data.gouv.fr et sont chargées directement dans le notebook via une URL publique. 
+Les données sur les arbres sont issues de data.gouv.fr et sont chargées directement dans le notebook via une URL publique. Les données IRIS proviennent aussi de bases de données publiques et ont été chargé sur le cluster. 
 
 ---

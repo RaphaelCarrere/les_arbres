@@ -1,1 +1,7 @@
+pandas
+matplotlib
+great-tables
+cartiflette
+geopandas
+numpy
 folium
