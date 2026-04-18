@@ -37,7 +37,7 @@ def suppression_colonnes(df):
     """
     Nettoyage : suppression des colonnes redondantes et inutiles.
     """
-    colonnes_a_supprimer = ['lat', 'lon', 'geo_point_2d', 'nom_commune', 'index_right', 'CLEABS', 'TYPE EMPLACEMENT', 'IDEMPLACEMENT', 'COMPLEMENT ADRESSE', 'LIEU / ADRESSE', 'iris', 'IDBASE']
+    colonnes_a_supprimer = ['lat', 'lon', 'geo_point_2d', 'nom_commune', 'index_right', 'cleabs', 'TYPE EMPLACEMENT', 'IDEMPLACEMENT', 'COMPLEMENT ADRESSE', 'LIEU / ADRESSE', 'iris', 'IDBASE']
 
     df_final = df.drop(columns=[c for c in colonnes_a_supprimer if c in df.columns])
 
@@ -131,7 +131,7 @@ def categoriser_stade(df_arbres: pd.DataFrame) -> pd.DataFrame:
     Les arbres sans stade connu sont ignorés (NaN).
     """
     df = df_arbres.copy()
-    df['stade_cat'] = df['STADE DE DEVELOPPEMENT'].map(STADE_MAP)
+    df['stade_cat'] = df['stade_de_developpement'].map(STADE_MAP)
     return df
 
 
@@ -191,7 +191,7 @@ def preparer_geodata_stade(gdf_zones: gpd.GeoDataFrame,
     gdf_zones : GeoDataFrame des iris (ou arrondissements) avec leur géométrie
     df_arbres : DataFrame df_arbres (issu de jointure_arbres_iris)
     niveau    : 'iris' → groupby sur 'code_iris'
-                'arrondissement' → groupby sur 'ARRONDISSEMENT'
+                'arrondissement' → groupby sur 'arrondissement'
 
     Retourne un GeoDataFrame prêt pour la carte.
     """
@@ -199,8 +199,8 @@ def preparer_geodata_stade(gdf_zones: gpd.GeoDataFrame,
         groupby_col = 'code_iris'
         merge_on = 'code_iris'
     else:
-        groupby_col = 'ARRONDISSEMENT'
-        merge_on = 'ARRONDISSEMENT'
+        groupby_col = 'arrondissement'
+        merge_on = 'arrondissement'
 
     stats = agregation_stade_par_zone(df_arbres, groupby_col=groupby_col)
 
@@ -312,7 +312,7 @@ def carte_stade_paris(gdf_iris_stats: gpd.GeoDataFrame,
 
     # --- Couche Arrondissements (optionnelle) ---
     if gdf_arrdt_stats is not None:
-        fields_arrdt = ['ARRONDISSEMENT', 'stade_dominant',
+        fields_arrdt = ['arrondissement', 'stade_dominant',
                         'n_Jeune', 'n_Adulte', 'n_Vieux', 'total',
                         'pct_Jeune', 'pct_Adulte', 'pct_Vieux']
         fields_arrdt = [f for f in fields_arrdt if f in gdf_arrdt_stats.columns]
@@ -324,7 +324,7 @@ def carte_stade_paris(gdf_iris_stats: gpd.GeoDataFrame,
             labels=True,
         )
         tooltip_arrdt = GeoJsonTooltip(
-            fields=['ARRONDISSEMENT', 'stade_dominant', 'pct_Jeune', 'pct_Adulte', 'pct_Vieux'],
+            fields=['arrondissement', 'stade_dominant', 'pct_Jeune', 'pct_Adulte', 'pct_Vieux'],
             aliases=['Arrdt', 'Dominant', '% Jeunes', '% Adultes', '% Vieux'],
         )
         layer_arrdt = GeoJson(
@@ -446,33 +446,32 @@ def extraire_arbres_remarquables(df_arbres: pd.DataFrame,
     df = df_arbres.copy()
 
     # Nettoyage
-    df['HAUTEUR (m)'] = pd.to_numeric(df['HAUTEUR (m)'], errors='coerce')
-    df['CIRCONFERENCE (cm)'] = pd.to_numeric(df['CIRCONFERENCE (cm)'], errors='coerce')
+    df['hauteur_m'] = pd.to_numeric(df['hauteur_m'], errors='coerce')
+    df['circonference_cm'] = pd.to_numeric(df['circonference_cm'], errors='coerce')
 
-    masque_remarquable = df['REMARQUABLE'].astype(str).str.strip().str.lower() == 'oui'
-    masque_hauteur = df['HAUTEUR (m)'] >= df['HAUTEUR (m)'].nlargest(top_n_hauteur).min()
-    masque_circonf = df['CIRCONFERENCE (cm)'] >= df['CIRCONFERENCE (cm)'].nlargest(top_n_circonf).min()
+    masque_remarquable = df['remarquable'].astype(str).str.strip().str.lower() == 'oui'
+    masque_hauteur = df['hauteur_m'] >= df['hauteur_m'].nlargest(top_n_hauteur).min()
+    masque_circonf = df['circonference_cm'] >= df['circonference_cm'].nlargest(top_n_circonf).min()
 
     df_rem = df[masque_remarquable | masque_hauteur | masque_circonf].copy()
 
     # Motif
     def motif(row):
         raisons = []
-        if str(row['REMARQUABLE']).strip().lower() == 'oui':
+        if str(row['remarquable']).strip().lower() == 'oui':
             raisons.append('Remarquable')
-        if pd.notna(row['HAUTEUR (m)']) and row['HAUTEUR (m)'] >= df['HAUTEUR (m)'].nlargest(top_n_hauteur).min():
+        if pd.notna(row['hauteur_m']) and row['hauteur_m'] >= df['hauteur_m'].nlargest(top_n_hauteur).min():
             raisons.append('Top hauteur')
-        if pd.notna(row['CIRCONFERENCE (cm)']) and row['CIRCONFERENCE (cm)'] >= df['CIRCONFERENCE (cm)'].nlargest(top_n_circonf).min():
+        if pd.notna(row['circonference_cm']) and row['circonference_cm'] >= df['circonference_cm'].nlargest(top_n_circonf).min():
             raisons.append('Top circonférence')
         return ' · '.join(raisons)
 
     df_rem['motif_remarquable'] = df_rem.apply(motif, axis=1)
 
-    # Conversion en GeoDataFrame
-    df_rem = df_rem.dropna(subset=['lat', 'lon'])
+    df_rem = df_rem.dropna(subset=['geometry'])
     gdf_rem = gpd.GeoDataFrame(
         df_rem,
-        geometry=gpd.points_from_xy(df_rem['lon'], df_rem['lat']),
+        geometry='geometry',
         crs='EPSG:4326'
     )
 
@@ -541,10 +540,10 @@ def carte_densite_paris(gdf_iris_densite: gpd.GeoDataFrame,
     ).add_to(m)
 
     # --- Couche Arrondissements ---
-    fields_arrdt = [c for c in ['ARRONDISSEMENT', 'n_arbres', 'superficie_km2', 'densite', 'classe_densite']
+    fields_arrdt = [c for c in ['arrondissement', 'n_arbres', 'superficie_km2', 'densite', 'classe_densite']
                     if c in gdf_arrdt_densite.columns]
     aliases_arrdt = {
-        'ARRONDISSEMENT': 'Arrondissement', 'n_arbres': 'Nombre d\'arbres',
+        'arrondissement': 'Arrondissement', 'n_arbres': 'Nombre d\'arbres',
         'superficie_km2': 'Superficie (km²)', 'densite': 'Densité (arbres/km²)',
         'classe_densite': 'Classe',
     }
@@ -560,7 +559,7 @@ def carte_densite_paris(gdf_iris_densite: gpd.GeoDataFrame,
             localize=True, labels=True,
         ),
         tooltip=GeoJsonTooltip(
-            fields=['ARRONDISSEMENT', 'densite', 'classe_densite'],
+            fields=['arrondissement', 'densite', 'classe_densite'],
             aliases=['Arrondissement', 'Densité (arbres/km²)', 'Classe'],
         ),
         show=False,
@@ -570,9 +569,9 @@ def carte_densite_paris(gdf_iris_densite: gpd.GeoDataFrame,
     cluster = folium.FeatureGroup(name=" Arbres remarquables")
 
     for _, row in gdf_remarquables.iterrows():
-        hauteur = f"{row['HAUTEUR (m)']} m" if pd.notna(row['HAUTEUR (m)']) else 'N/A'
-        circonf = f"{row['CIRCONFERENCE (cm)']} cm" if pd.notna(row['CIRCONFERENCE (cm)']) else 'N/A'
-        libelle = row.get('LIBELLE FRANCAIS', 'Inconnu')
+        hauteur = f"{row['hauteur_m']} m" if pd.notna(row['hauteur_m']) else 'N/A'
+        circonf = f"{row['circonference_cm']} cm" if pd.notna(row['circonference_cm']) else 'N/A'
+        libelle = row.get('libelle_francais', 'Inconnu')
         motif   = row.get('motif_remarquable', '')
 
         tooltip_txt = (
