@@ -445,17 +445,8 @@ def calculer_densite_par_zone(df_arbres: pd.DataFrame,
 def extraire_arbres_remarquables(df_arbres: pd.DataFrame,
                                   top_n_hauteur: int = 50,
                                   top_n_circonf: int = 50) -> gpd.GeoDataFrame:
-    """
-    Extrait les arbres remarquables selon 3 critères :
-    - Colonne REMARQUABLE == 'Oui'
-    - Top N des plus hauts
-    - Top N des plus grosses circonférences
-
-    Retourne un GeoDataFrame avec une colonne 'motif_remarquable'.
-    """
     df = df_arbres.copy()
 
-    # Nettoyage
     df['hauteur_m'] = pd.to_numeric(df['hauteur_m'], errors='coerce')
     df['circonference_cm'] = pd.to_numeric(df['circonference_cm'], errors='coerce')
 
@@ -465,7 +456,6 @@ def extraire_arbres_remarquables(df_arbres: pd.DataFrame,
 
     df_rem = df[masque_remarquable | masque_hauteur | masque_circonf].copy()
 
-    # Motif
     def motif(row):
         raisons = []
         if str(row['remarquable']).strip().lower() == 'oui':
@@ -479,11 +469,10 @@ def extraire_arbres_remarquables(df_arbres: pd.DataFrame,
     df_rem['motif_remarquable'] = df_rem.apply(motif, axis=1)
 
     df_rem = df_rem.dropna(subset=['geometry'])
-    gdf_rem = gpd.GeoDataFrame(
-        df_rem,
-        geometry='geometry',
-        crs='EPSG:4326'
-    )
+    gdf_rem = gpd.GeoDataFrame(df_rem, geometry='geometry', crs='EPSG:2154')  # ← CRS correct
+
+    # Reprojection en WGS84 pour Folium
+    gdf_rem = gdf_rem.to_crs(epsg=4326)
 
     return gdf_rem
 
